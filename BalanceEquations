@@ -1,0 +1,39 @@
+% BalanceEquations.m
+% Mass balance equations for general system in week two notes (cellmass, substrate,
+% and volume).
+%
+% Arguments:
+% x 	- 	State vector 
+% t 	- 	Current time
+% DF 	- 	DataFile pointer (this assumes the model has been generated using UNIVERSAL)
+% S		-	Stoichiometric matrix 
+% kV 	-	Parameter vector 
+% ------------------------------------------------------------------------------------- %
+function [dxdt] = BalanceEquations(t,x,DF,S,kV)
+	% Compute the input flow rate -
+	FIN = ComputeInputFlowRate(t,x,DF);
+	
+	% Compute the kinetcs -
+	qV = Kinetics(t,x,DF,S,kV);
+	
+	% Alias the states for readability -
+	X = x(1,1);
+	S = x(2,1);
+	P = x(3,1);
+	V = x(4,1);
+	
+	% Parameters -
+	ALPHA = kV(1,1);
+	XIN = kV(2,1);
+	SIN = kV(3,1);
+	PIN = kV(4,1);
+	YXS = kV(11,1);
+	YXP = kV(12,1);
+	BETA = kV(13,1);
+	
+	% Mass balances -
+	dxdt(1,1) = (FIN/V)*(XIN - X) + (qV(1,1) - qV(2,1))*X;							% cell mass
+	dxdt(2,1) = (FIN/V)*(SIN - S) - (1/YXS)*(qV(3,1))*X + (BETA/YXS)*qV(2,1)*X;		% substrate
+	dxdt(3,1) = (FIN/V)*(PIN - P) + (1/YXP)*qV(4,1)*X;								% product
+	dxdt(4,1) = FIN - ALPHA*FIN; 													% volume
+return;
