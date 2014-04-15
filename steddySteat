@@ -1,0 +1,104 @@
+ % FindSteadyState.m
+ % Simple routine for numerically estimating the steady-state of a system of ODEs
+ % by running the model until the difference between consecutive solutions is 
+ % less than some specified tolerance
+ %
+ % Arguments:
+ % pDriverFile - Pointer to the ODE driver file (default: SolveMassBalances)
+ % pDataFile - Pointer to the DataFile (default: DataFile)
+ % DF 	- 	DataFile pointer (this assumes the model has been generated using UNIVERSAL)
+ % TSIM	-	Holds the simulation times for the 
+ % XSIM -	Holds the steady-state solution (depends upon solver) 
+ % ------------------------------------------------------------------------------------- %
+function [TSIM,XSIM] = FindSteadyState(pDriverFile,pDataFile,DF)
+	% Get the dimension of the system an initialize some stuff -
+	NP = DF.NUMBER_PARAMETERS;
+	NX = DF.NUMBER_OF_STATES;
+	XSIM = [];
+	TSIM = [];
+	
+	% Do we want to exclude some species from the ss calaculation?
+	EXCLUDE = [3];
+	IDX = 1:NX;
+	INCLUDE = setdiff(IDX,EXCLUDE);
+	
+	% When we make it here we need to find a steady-state -
+	SS_LOOP_FLAG = 1;
+	TSTART = 0.0;
+	TSTOP = 100;
+	EPSILON = 0.01;
+	DEPTH = length(INCLUDE);
+	TOL_BEST = 10000000;
+	while (SS_LOOP_FLAG)
+		
+		cmd = ['Ok, here we go ...'];
+		disp(cmd);
+		
+		% Run for the solver for a bit -
+		
+		[TTMP_1,XTMP_1]=feval(pDriverFile,pDataFile,TSTART,TSTOP,2.0,DF);
+		
+		% Get the last time point and set the new time scale -
+		TSTART = TTMP_1(end);
+		TSTOP = TSTART + 5;
+		
+		% Reset the IC -
+		IC = transpose(XTMP_1(end,:));
+		DF.INITIAL_CONDITIONS = IC;
+		
+		% Run for the solver for a bit -
+		[TTMP_2,XTMP_2]=feval(pDriverFile,pDataFile,TSTART,TSTOP,1.0,DF);
+		
+		% OK, when I get here I have to time-points. We need to run the simulation until the change between the points is less than  epsilon -
+		ERR = (XTMP_2(end,INCLUDE)' - XTMP_1(end,INCLUDE)').^2;
+		
+		% Sort the error and grab the worst offenders -
+		[mV,I]=sort(ERR,'descend');
+		TOL = sum(mV(1:DEPTH));
+		
+		DIFFERENCE_BETWEEN_TRIALS = abs((TOL-TOL_BEST));
+	
+		msg=['Current error tolerance = ',num2str(TOL)];
+		disp(msg);
+		
+		% Super-hack...
+		if (isnan(TOL))
+			% If I get here then something is wrong in the TOL calc - use the max err instead
+			TOL = mV(1);
+		end;
+		
+		if (TOL < EPSILON || DIFFERENCE_BETWEEN_TRIALS<1e-4)
+			% If we get here then I have a steady-state. Grab the value and set the FLAG to 0 to KIA the loop -
+			SS_LOOP_FLAG = 0;
+			ICSS = transpose(XTMP_2(end,:));
+		else
+		
+			% Reset the time and IC -
+			% Get the last time point and set the new time scale -
+			TSTART = TTMP_2(end);
+			TSTOP = TSTART + 10000;
+		
+			TOL_BEST = TOL;
+		
+			% Reset the IC -
+			IC = transpose(XTMP_2(end,:));
+			DF.INITIAL_CONDITIONS = IC;
+		end;
+	end;
+	
+	% Lets get the inital values
+	XSIM = [XSIM;ICSS];
+	TSIM = [TSIM;0];
+	
+	%msg = ['Found steady-state ... Starting sims...'];
+	%disp(msg);
+	
+	%Run to next stimulus
+	DF.INITIAL_CONDITIONS=ICSS;
+	[T,X]=feval(pDriverFile,pDataFile,0.0,1000,100.0,DF);
+	
+	% OK, so I reset the ICs here -
+	DF.INITIAL_CONDITIONS = X(end,:)';
+	XSIM = [XSIM X(2:end,:)'];
+	TSIM = [TSIM;T(2:end)'];	
+return;
