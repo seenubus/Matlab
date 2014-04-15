@@ -1,0 +1,51 @@
+% Kinetics.m
+% Function that takes the system state and returns the vector of kinetic rates.
+%
+% Arguments: 
+% t  - current time 
+% x  - state vector 
+% S -  stochiometric matrix
+% kV - parameter vector 
+% rV - rate vector 
+% ------------------------------------------------------------------------------------- %
+function [rV] = Kinetics(t,x,DF,S,kV)
+
+	% How many rates do I have?
+	NUMBER_OF_RATES = DF.NUMBER_OF_RATES;
+	
+	% Alias the states for readability -
+	X = x(1,1);
+	S = x(2,1);
+	P = x(3,1);
+	V = x(4,1);
+	
+	% Alias the parameters for readability -
+	mu_g_max = kV(5,1);
+	KGS = kV(6,1);
+	KIG = kV(7,1);
+	P_MAX = kV(8,1);
+	TOLERANCE_ORDER = kV(9,1);
+	kd = kV(10,1);
+	
+	% initialize rate vector -
+	rV = zeros(NUMBER_OF_RATES,1);
+
+	% Compute tolerance term -
+	TOLERANCE = (1 - P/P_MAX)^(TOLERANCE_ORDER);
+	if (TOLERANCE<0)
+		TOLERANCE = 0.0;
+	end;
+
+	% Rate 1 - growth rate
+	rV(1,1) = mu_g_max*(S/(S + KGS + S^2/KIG))*TOLERANCE;
+	
+	% Rate 2 - cell death
+	rV(2,1) = kd;
+	
+	% Rate 3 - susbtrate uptake -
+	rV(3,1) = rV(1,1);
+	
+	% Rate 4 - product formation -
+	rV(4,1) = rV(1,1);
+
+return;
