@@ -1,0 +1,22 @@
+% ComputeInputFlowRate.m
+% Helper function that computes the input volumetric flow rate
+%
+% Arguments: 
+% t  - current time 
+% x  - state vector 
+% S -  stochiometric matrix
+% kV - parameter vector 
+% rV - rate vector 
+% ------------------------------------------------------------------------------------- %
+function FIN = ComputeInputFlowRate(t,x,DF)
+
+	FIN = 0.01;
+
+	
+	% Enforce the volume constraint -
+	V = x(4,1);
+	if (V>950)
+		FIN = 0;
+	end;
+	
+return;
