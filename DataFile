@@ -1,0 +1,64 @@
+% DataFile.m
+% Struct that holds system parameters (kinetic/physical parameters and initial conditions)
+%
+% Arguments: 
+% TSTART  - Time start 
+% TSTOP  - Time stop 
+% Ts - Time step 
+% INDEX - Parameter set index (for ensemble calculations) 
+% DF  - Data file instance 
+% ------------------------------------------------------------------------------------- %
+function DF = DataFile(TSTART,TSTOP,Ts,INDEX)
+
+% Load the stoichiometric matrix -
+S = [];	% no matrix for this example
+
+% specify the parameter vector -
+k =  [ ...
+	0.0		; % 1 ratio between Fin and Fout			ALPHA
+	0.0		; % 2 cellmass in feed stream				XIN
+	1.0		; % 3 substrate in feed stream				SIN
+	0.0		; % 4 product in feed stream				PIN
+	0.5		; % 5 max growth rate constant				mu_g_max
+	0.05	; % 6 growth saturation constant			KGS
+	100.0	; % 7 growth inhibition constant wrt S		KIG
+	150.0	; % 8 maximum product tolerance 			P_MAX
+	1.2		; % 9 tolerance function order 				TOLERANCE_ORDER
+	0.01	; % 10 cell mass death constant				k_d
+	1.2		; % 11 cell mass yld 						YXS
+	0.1		; % 12 product yld							YXP
+	0.05	; % 13 beta (cryptic growth)				beta
+];
+
+% specify the initial conditions -
+IC = [
+	0.01 	; % 1 cellmass		X
+	0.1 	; % 2 sugar			S
+	0.0		; % 3 product		P
+	1.0		; % 4 volume		V
+];
+
+% What is the volumtric flow rate in (user can override in 
+% ComputeInputFlowRate.m)
+VOLUMETRIC_FLOW_RATE_IN = 0.01;
+
+% Load parameter sets from disk -
+NPARAMETERS=length(k);
+NSTATES=length(IC);
+kV = [k];
+
+% How many rates do we have?
+NRATES = 2;
+
+% =========== DO NOT EDIT BELOW THIS LINE ==============
+DF.STOICHIOMETRIC_MATRIX=S;
+DF.RATE_CONSTANT_VECTOR=k;
+DF.INITIAL_CONDITIONS=IC;
+DF.NUMBER_PARAMETERS=NPARAMETERS;
+DF.NUMBER_OF_STATES=NSTATES;
+DF.NUMBER_OF_RATES = NRATES;
+DF.PARAMETER_VECTOR=kV;
+DF.VOLUMETRIC_FLOW_RATE_IN = VOLUMETRIC_FLOW_RATE_IN;
+DF.MEASUREMENT_SELECTION_VECTOR = 1:NSTATES;
+% ======================================================
+return;
