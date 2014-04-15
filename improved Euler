@@ -1,0 +1,45 @@
+function [t,y]= euler2(pBalanceEquations,TSTART, TSTOP, Ts, IC)
+%pBalanceEquations = @(t,x)BalanceEquations(t,x,DF,S,kV);
+
+TSIM = TSTART:Ts:TSTOP;
+NSTEPS = length(TSIM);
+
+
+% Script to test the code -
+
+
+% Load the DF - 
+DF = DataFile(TSTART,TSTOP,Ts,[]);
+S = DF.STOICHIOMETRIC_MATRIX;
+kV=DF.PARAMETER_VECTOR;
+% Get the initial condition -
+IC = DF.INITIAL_CONDITIONS;
+XARR = [IC];
+XCURRENT = IC;
+
+
+
+for time_step_index = 1:NSTEPS - 1
+    
+    t = TSIM(time_step_index);
+   % if length(t)> length(TSIM (time_step_index) );
+   %     break
+   %else t = TSIM(time_step_index);
+   % end %if
+DXDT = BalanceEquations(t,XCURRENT,DF,S,kV);
+
+	XNEXT = XCURRENT + ((DXDT+BalanceEquations(t+1,XCURRENT+Ts*DXDT,DF,S,kV)*Ts))/2;
+% Capture -
+	XARR = [XARR XNEXT];
+	
+	% update -
+	XCURRENT = XNEXT;
+
+end;
+hold on;
+
+y=XARR; %Index Exceeds Matrix Dimensions!?
+
+%V=[t',y'];
+%plot(t,y);
+title('ahYes')
