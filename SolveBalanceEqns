@@ -1,0 +1,45 @@
+% SolveBalanceEquations.m
+% Simple driver routine to solve a system of mass balances.
+%
+% Arguments: 
+% pDataFile  - pointer to datafile 
+% TSTART  - Time start 
+% TSTOP  - Time stop 
+% Ts - Time step 
+% DFIN  - Custom data file instance 
+% TSIM - Simulation time vector 
+% X - Simulation state array (NTIME x NSPECIES)
+% OUTPUT - Simulation state array with measured states (NTIME X NMEASURED) 
+% ------------------------------------------------------------------------------------- %
+function [TSIM,X,OUTPUT] = SolveBalanceEquationsAnurag(pDataFile,TSTART,TSTOP,Ts,DFIN)
+
+% Check to see if I need to load the datafile
+if (~isempty(DFIN))
+	DF = DFIN;
+else
+	DF = feval(pDataFile,TSTART,TSTOP,Ts,[]);
+end;
+
+% Get reqd stuff from data struct -
+IC = DF.INITIAL_CONDITIONS;
+TSIM = TSTART:Ts:TSTOP;
+S = DF.STOICHIOMETRIC_MATRIX;
+kV = DF.PARAMETER_VECTOR;
+NRATES = DF.NUMBER_PARAMETERS;
+NSTATES = DF.NUMBER_OF_STATES;
+MEASUREMENT_INDEX_VECTOR = DF.MEASUREMENT_SELECTION_VECTOR;
+
+OCTAVE_FLAG = 1;
+
+% Call the ODE solver - the default is ODE15s for matlab
+pBalanceEquations = @(t,x)BalanceEquations(t,x,DF,S,kV);
+[T,X] = euler2(pBalanceEquations,TSTART, TSTOP, Ts,IC);
+
+% make sure all is positive -
+X = abs(X);
+
+% Calculate the output - 
+%OUTPUT = X(:,MEASUREMENT_INDEX_VECTOR);
+OUTPUT = X;
+% return to caller - 
+return;
