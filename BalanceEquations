@@ -32,8 +32,8 @@ function [dxdt] = BalanceEquations(t,x,DF,S,kV)
 	BETA = kV(13,1);
 	
 	% Mass balances -
-	dxdt(1,1) = (FIN/V)*(XIN - X) + (qV(1,1) - qV(2,1))*X;							% cell mass
-	dxdt(2,1) = (FIN/V)*(SIN - S) - (1/YXS)*(qV(3,1))*X + (BETA/YXS)*qV(2,1)*X;		% substrate
-	dxdt(3,1) = (FIN/V)*(PIN - P) + (1/YXP)*qV(4,1)*X;								% product
-	dxdt(4,1) = FIN - ALPHA*FIN; 													% volume
+	dxdt(1,1) = (FIN/V)*(XIN - X) + (qV(1,1) - qV(2,1))*X;			        % cell mass
+	dxdt(2,1) = (FIN/V)*(SIN - S) - (1/YXS)*(qV(3,1))*X + (BETA/YXS)*qV(2,1)*X;	% substrate
+	dxdt(3,1) = (FIN/V)*(PIN - P) + (1/YXP)*qV(4,1)*X;				% product
+	dxdt(4,1) = FIN - ALPHA*FIN; 							% volume
 return;
